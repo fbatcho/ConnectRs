@@ -61,8 +61,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/fb"
         android:layout_alignParentEnd="true"
-        android:layout_marginEnd="29dp"
-        android:text="Google +">
+        android:layout_marginEnd="29dp"/>
 
         <Button
             android:id="@+id/ggout"
@@ -70,15 +69,19 @@
             android:layout_height="wrap_content"
             android:text="Sign out"
             android:visibility="gone" />
-    </com.google.android.gms.common.SignInButton>
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/fb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="145dp"
-        android:text="Facebook" />
+        android:layout_marginTop="145dp" />
 
+    <com.twitter.sdk.android.core.identity.TwitterLoginButton
+        android:id="@+id/tt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
 
 </RelativeLayout>

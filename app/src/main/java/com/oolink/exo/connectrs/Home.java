@@ -19,6 +19,8 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
@@ -31,7 +33,20 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+
+import io.fabric.sdk.android.Fabric;
 
 
 public class Home extends AppCompatActivity implements
@@ -42,17 +57,24 @@ public class Home extends AppCompatActivity implements
     private TextView myName, myEmail;
     private ImageView myProfil;
     private LinearLayout myProfileLayout;
-    private LoginButton fb;
+
+
+    //Google
     private SignInButton ggin;
     private Button ggout;
-//Google
     private GoogleApiClient mGoogleApiClient;
     private ProgressDialog mProgressDialog;
     private static final int RC_SIGN_IN = 007;
 
-//Facebook
-private CallbackManager callbackManager;
+    //Facebook
+    private LoginButton fb;
+    private CallbackManager callbackManager;
+
     //Twitter
+    private TwitterLoginButton tt;
+    private static final String TWITTER_KEY = "l2TCeZ6YvEwU8z2reBqA9nQjy";
+    private static final String TWITTER_SECRET = "pUW4LhThuDHHHhxwkJEMTqEc3XUiNNhpWzZz6tHXS86ZGgY06R";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,15 +85,13 @@ private CallbackManager callbackManager;
         myEmail = (TextView) findViewById(R.id.myEmail);
         myProfil = (ImageView) findViewById(R.id.myProfil);
         myProfileLayout = (LinearLayout) findViewById(R.id.myProfileLayout);
-        fb = (LoginButton) findViewById(R.id.fb);
-        ggin = (SignInButton) findViewById(R.id.ggin);
-        ggout = (Button) findViewById(R.id.ggout);
 
-        fb.setOnClickListener(this);
-        ggin.setOnClickListener(this);
-        ggout.setOnClickListener(this);
 
 //For login Google
+        ggin = (SignInButton) findViewById(R.id.ggin);
+        ggout = (Button) findViewById(R.id.ggout);
+        ggin.setOnClickListener(this);
+        ggout.setOnClickListener(this);
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
@@ -82,37 +102,69 @@ private CallbackManager callbackManager;
                 .build();
 
         //For login Facebook
-
+        fb = (LoginButton) findViewById(R.id.fb);
+        fb.setOnClickListener(this);
+        fb.setReadPermissions("email");
+        fb.setReadPermissions("last_name");
+        fb.setReadPermissions("first_name");
+        fb.setReadPermissions(Arrays.asList("email", "last-name", "first_name"));
         FacebookSdk.sdkInitialize(this.getApplicationContext());
         callbackManager = CallbackManager.Factory.create();
-
         fb.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-
 
             @Override
             public void onSuccess(LoginResult loginResult) {
-                myName.setText(
-                        "User ID: "
-                                + loginResult.getAccessToken().getUserId()
-                                + "\n" +
-                                "Auth Token: "
-                                + loginResult.getAccessToken().getToken()
-                );
+                myName.setText("Reussi!");
+                GraphRequest request = GraphRequest.newMeRequest(
+                        loginResult.getAccessToken(),
+                        new GraphRequest.GraphJSONObjectCallback() {
 
+                            @Override
+                            public void onCompleted(JSONObject object, GraphResponse response) {
+                                try {
+                                    myEmail.setText(object.getString("email"));
+                                    myName.setText(object.getString("name"));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                );
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id,name,email");
+                request.setParameters(parameters);
+                request.executeAsync();
             }
 
             @Override
             public void onCancel() {
-                myName.setText("Login attempt canceled.");
+                myName.setText("Login annulé.");
             }
 
             @Override
             public void onError(FacebookException error) {
-                myName.setText("Login attempt failed.");
+                myName.setText("Login échoué.");
+            }
+        });
+
+
+        //For login Twitter
+        tt = (TwitterLoginButton) findViewById(R.id.tt);
+        tt.setOnClickListener(this);
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+        Fabric.with(this, new Twitter(authConfig));
+        tt.setCallback(new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+                myName.setText(result.data.getUserName() + " Action réussi!");
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                myName.setText("Erreur login Twitter");
             }
         });
     }
-
 
 
     private void signIn() {
@@ -228,6 +280,7 @@ private CallbackManager callbackManager;
             handleSignInResult(result);
         }
         callbackManager.onActivityResult(requestCode, resultCode, data);
+        tt.onActivityResult(requestCode, resultCode, data);
     }
 
     private void updateUI(boolean isSignedIn) {
