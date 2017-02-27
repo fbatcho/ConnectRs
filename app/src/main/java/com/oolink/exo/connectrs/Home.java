@@ -8,13 +8,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInApi;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
@@ -24,22 +32,27 @@ import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 
-import java.util.logging.Handler;
 
 
-public class Home extends AppCompatActivity implements View.OnClickListener,
+public class Home extends AppCompatActivity implements
+        View.OnClickListener,
         GoogleApiClient.OnConnectionFailedListener {
 
 
     private TextView myName, myEmail;
-    //private ImageView myProfil;
+    private ImageView myProfil;
+    private LinearLayout myProfileLayout;
     private LoginButton fb;
-    private SignInButton gg;
-
+    private SignInButton ggin;
+    private Button ggout;
+//Google
     private GoogleApiClient mGoogleApiClient;
     private ProgressDialog mProgressDialog;
     private static final int RC_SIGN_IN = 007;
 
+//Facebook
+private CallbackManager callbackManager;
+    //Twitter
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,13 +61,17 @@ public class Home extends AppCompatActivity implements View.OnClickListener,
 
         myName = (TextView) findViewById(R.id.myName);
         myEmail = (TextView) findViewById(R.id.myEmail);
-       // myProfil = (ImageView) findViewById(R.id.myProfil);
+        myProfil = (ImageView) findViewById(R.id.myProfil);
+        myProfileLayout = (LinearLayout) findViewById(R.id.myProfileLayout);
         fb = (LoginButton) findViewById(R.id.fb);
-        gg = (SignInButton) findViewById(R.id.gg);
+        ggin = (SignInButton) findViewById(R.id.ggin);
+        ggout = (Button) findViewById(R.id.ggout);
 
         fb.setOnClickListener(this);
-        gg.setOnClickListener(this);
+        ggin.setOnClickListener(this);
+        ggout.setOnClickListener(this);
 
+//For login Google
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
@@ -64,18 +81,51 @@ public class Home extends AppCompatActivity implements View.OnClickListener,
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        //For login Facebook
+
+        FacebookSdk.sdkInitialize(this.getApplicationContext());
+        callbackManager = CallbackManager.Factory.create();
+
+        fb.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+
+
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                myName.setText(
+                        "User ID: "
+                                + loginResult.getAccessToken().getUserId()
+                                + "\n" +
+                                "Auth Token: "
+                                + loginResult.getAccessToken().getToken()
+                );
+
+            }
+
+            @Override
+            public void onCancel() {
+                myName.setText("Login attempt canceled.");
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                myName.setText("Login attempt failed.");
+            }
+        });
     }
+
+
 
     private void signIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
+
     private void signOut() {
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        gg.setVisibility(View.VISIBLE);
+                        updateUI(false);
                     }
                 });
     }
@@ -85,8 +135,13 @@ public class Home extends AppCompatActivity implements View.OnClickListener,
         int id = v.getId();
 
         switch (id) {
-            case R.id.gg:
+            case R.id.ggin:
                 signIn();
+                break;
+            case R.id.ggout:
+                signOut();
+                break;
+            case R.id.fb:
                 break;
         }
     }
@@ -134,21 +189,21 @@ public class Home extends AppCompatActivity implements View.OnClickListener,
 
             myName.setText(personName);
             myEmail.setText(email);
-            /*** Glide.with(getApplicationContext()).load(personPhotoUrl)
-             .thumbnail(0.5f)
-             .crossFade()
-             .diskCacheStrategy(DiskCacheStrategy.ALL)
-             .into(myProfil);**/
+            Glide.with(getApplicationContext()).load(personPhotoUrl)
+                    .thumbnail(0.5f)
+                    .crossFade()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(myProfil);
 
 
-                gg.setVisibility(View.GONE);
-            } else {
-                gg.setVisibility(View.VISIBLE);
+            updateUI(true);
+        } else {
+            updateUI(false);
 
-            }
-
+        }
 
     }
+
     private void showProgressDialog() {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(this);
@@ -171,6 +226,19 @@ public class Home extends AppCompatActivity implements View.OnClickListener,
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInResult(result);
+        }
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void updateUI(boolean isSignedIn) {
+        if (isSignedIn) {
+            ggin.setVisibility(View.GONE);
+            ggout.setVisibility(View.VISIBLE);
+            myProfileLayout.setVisibility(View.VISIBLE);
+        } else {
+            ggin.setVisibility(View.VISIBLE);
+            ggout.setVisibility(View.GONE);
+            myProfileLayout.setVisibility(View.GONE);
         }
     }
 
