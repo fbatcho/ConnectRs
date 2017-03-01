@@ -47,6 +47,7 @@ import org.json.JSONObject;
 import java.util.Arrays;
 
 import io.fabric.sdk.android.Fabric;
+import util.ConnectGoogle;
 
 
 public class Home extends AppCompatActivity implements
@@ -62,9 +63,8 @@ public class Home extends AppCompatActivity implements
     //Google
     private SignInButton ggin;
     private Button ggout;
-    private GoogleApiClient mGoogleApiClient;
-    private ProgressDialog mProgressDialog;
-    private static final int RC_SIGN_IN = 007;
+    private ConnectGoogle connectGoogle;
+
 
     //Facebook
     private LoginButton fb;
@@ -79,6 +79,7 @@ public class Home extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(this.getApplicationContext());
         setContentView(R.layout.activity_home);
 
         myName = (TextView) findViewById(R.id.myName);
@@ -92,23 +93,13 @@ public class Home extends AppCompatActivity implements
         ggout = (Button) findViewById(R.id.ggout);
         ggin.setOnClickListener(this);
         ggout.setOnClickListener(this);
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
+        connectGoogle = new ConnectGoogle(this, this, this, myName, myEmail, myProfil);
 
         //For login Facebook
         fb = (LoginButton) findViewById(R.id.fb);
         fb.setOnClickListener(this);
-        fb.setReadPermissions("email");
-        fb.setReadPermissions("last_name");
-        fb.setReadPermissions("first_name");
-        fb.setReadPermissions(Arrays.asList("email", "last-name", "first_name"));
-        FacebookSdk.sdkInitialize(this.getApplicationContext());
+
         callbackManager = CallbackManager.Factory.create();
         fb.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
 
@@ -121,12 +112,9 @@ public class Home extends AppCompatActivity implements
 
                             @Override
                             public void onCompleted(JSONObject object, GraphResponse response) {
-                                try {
-                                    myEmail.setText(object.getString("email"));
-                                    myName.setText(object.getString("name"));
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
+                                myEmail.setText(object.optString("email"));
+                                myName.setText(object.optString("last_name"));
+
                             }
                         }
                 );
@@ -167,33 +155,22 @@ public class Home extends AppCompatActivity implements
     }
 
 
-    private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-    private void signOut() {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        updateUI(false);
-                    }
-                });
-    }
-
     @Override
     public void onClick(View v) {
         int id = v.getId();
 
         switch (id) {
             case R.id.ggin:
-                signIn();
+                //connectGoogle.signIn();
+                startActivityForResult(connectGoogle.signIn(), connectGoogle.getRcSignIn());
+
                 break;
             case R.id.ggout:
-                signOut();
+                connectGoogle.signOut();
                 break;
             case R.id.fb:
+                break;
+            case R.id.tt:
                 break;
         }
     }
@@ -206,78 +183,18 @@ public class Home extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
-        if (opr.isDone()) {
-            Log.d(Home.class.getSimpleName(), "Got cached sign-in");
-            GoogleSignInResult result = opr.get();
-            handleSignInResult(result);
-        } else {
-            showProgressDialog();
-            opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
-                @Override
-                public void onResult(GoogleSignInResult googleSignInResult) {
-                    hideProgressDialog();
-                    handleSignInResult(googleSignInResult);
-                }
-            });
-        }
+        connectGoogle.CallGoogle();
 
     }
 
-    private void handleSignInResult(GoogleSignInResult result) {
-        Log.d(Home.class.getSimpleName(), "handleSignInResult:" + result.isSuccess());
-        if (result.isSuccess()) {
-            // Signed in successfully, show authenticated UI.
-            GoogleSignInAccount acct = result.getSignInAccount();
-
-            Log.e(Home.class.getSimpleName(), "display name: " + acct.getDisplayName());
-
-            String personName = acct.getDisplayName();
-            String personPhotoUrl = acct.getPhotoUrl().toString();
-            String email = acct.getEmail();
-
-            Log.e(Home.class.getSimpleName(), "Name: " + personName + ", email: " + email
-                    + ", Image: " + personPhotoUrl);
-
-            myName.setText(personName);
-            myEmail.setText(email);
-            Glide.with(getApplicationContext()).load(personPhotoUrl)
-                    .thumbnail(0.5f)
-                    .crossFade()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(myProfil);
-
-
-            updateUI(true);
-        } else {
-            updateUI(false);
-
-        }
-
-    }
-
-    private void showProgressDialog() {
-        if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage("Chargement");
-            mProgressDialog.setIndeterminate(true);
-        }
-
-        mProgressDialog.show();
-    }
-
-    private void hideProgressDialog() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.hide();
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
+        if (requestCode == connectGoogle.getRcSignIn()) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
+            connectGoogle.handleSignInResult(result);
+            updateUI(connectGoogle.isVisibility());
         }
         callbackManager.onActivityResult(requestCode, resultCode, data);
         tt.onActivityResult(requestCode, resultCode, data);

@@ -20,7 +20,7 @@ android {
         config {
             keyAlias 'ProjetX'
             keyPassword 'mant'
-            storeFile file('\\app/debug.keystore')
+            storeFile file('C:/Users/Antoine/.android/debug.keystore')
             storePassword 'mant'
         }
     }
@@ -53,19 +53,17 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.2.0'
+    compile 'com.android.support:appcompat-v7:25.1.1'
 
     compile 'com.facebook.android:facebook-android-sdk:4.18.0'
 
     compile 'com.google.android.gms:play-services-auth:10.2.0'
     compile'com.google.android.gms:play-services-plus:10.2.0'
-
     compile 'com.github.bumptech.glide:glide:3.7.0'
-
     compile('com.twitter.sdk.android:twitter:2.3.2@aar') {
         transitive = true;
     }
 
-    compile 'com.android.support:support-v4:25.2.0'
+    compile 'com.android.support:support-v4:25.1.1'
     testCompile 'junit:junit:4.12'
 }
