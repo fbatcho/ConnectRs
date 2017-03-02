@@ -1,57 +1,49 @@
 package com.oolink.exo.connectrs;
 
 
-import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
+
 import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.login.LoginResult;
+
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.OptionalPendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
+
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.TwitterAuthConfig;
+
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
+import com.twitter.sdk.android.core.models.User;
+import com.twitter.sdk.android.core.services.AccountService;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Arrays;
-
-import io.fabric.sdk.android.Fabric;
+import util.ConnectFacebook;
 import util.ConnectGoogle;
+import util.ConnectTwitter;
 
 
 public class Home extends AppCompatActivity implements
-        View.OnClickListener,
         GoogleApiClient.OnConnectionFailedListener {
 
 
@@ -59,6 +51,10 @@ public class Home extends AppCompatActivity implements
     private ImageView myProfil;
     private LinearLayout myProfileLayout;
 
+    private final FragmentActivity fragmentActivity = this;
+    private final Context context = this;
+    private final GoogleApiClient.OnConnectionFailedListener listener = this;
+    private int logRs;
 
     //Google
     private SignInButton ggin;
@@ -68,19 +64,21 @@ public class Home extends AppCompatActivity implements
 
     //Facebook
     private LoginButton fb;
-    private CallbackManager callbackManager;
+    private ConnectFacebook connectFacebook;
+
 
     //Twitter
     private TwitterLoginButton tt;
-    private static final String TWITTER_KEY = "l2TCeZ6YvEwU8z2reBqA9nQjy";
-    private static final String TWITTER_SECRET = "pUW4LhThuDHHHhxwkJEMTqEc3XUiNNhpWzZz6tHXS86ZGgY06R";
+    private ConnectTwitter connectTwitter;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(this.getApplicationContext());
+        connectTwitter = new ConnectTwitter(this);
         setContentView(R.layout.activity_home);
+
 
         myName = (TextView) findViewById(R.id.myName);
         myEmail = (TextView) findViewById(R.id.myEmail);
@@ -88,92 +86,78 @@ public class Home extends AppCompatActivity implements
         myProfileLayout = (LinearLayout) findViewById(R.id.myProfileLayout);
 
 
-//For login Google
+        connectGoogle = new ConnectGoogle(context, myName, myEmail, myProfil);
+
+        //For login Google
         ggin = (SignInButton) findViewById(R.id.ggin);
         ggout = (Button) findViewById(R.id.ggout);
-        ggin.setOnClickListener(this);
-        ggout.setOnClickListener(this);
+        connectGoogle.signInServices(fragmentActivity, listener);
 
-        connectGoogle = new ConnectGoogle(this, this, this, myName, myEmail, myProfil);
+
+        ggin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(connectGoogle.signInGoogle(), connectGoogle.getRcSignIn());
+                logRs = 1;
+            }
+        });
+
+        ggout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                connectGoogle.signOutGoogle();
+                updateUI(connectGoogle.isVisibility());
+                logRs = 0;
+            }
+        });
+
 
         //For login Facebook
         fb = (LoginButton) findViewById(R.id.fb);
-        fb.setOnClickListener(this);
-
-        callbackManager = CallbackManager.Factory.create();
-        fb.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-
+        connectFacebook = new ConnectFacebook();
+        fb.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onSuccess(LoginResult loginResult) {
-                myName.setText("Reussi!");
-                GraphRequest request = GraphRequest.newMeRequest(
-                        loginResult.getAccessToken(),
-                        new GraphRequest.GraphJSONObjectCallback() {
-
-                            @Override
-                            public void onCompleted(JSONObject object, GraphResponse response) {
-                                myEmail.setText(object.optString("email"));
-                                myName.setText(object.optString("last_name"));
-
-                            }
-                        }
-                );
-                Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,name,email");
-                request.setParameters(parameters);
-                request.executeAsync();
-            }
-
-            @Override
-            public void onCancel() {
-                myName.setText("Login annulé.");
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-                myName.setText("Login échoué.");
+            public void onClick(View v) {
+                connectFacebook.callFacebook(fb, myName, myEmail);
+                logRs = 2;
             }
         });
 
 
         //For login Twitter
         tt = (TwitterLoginButton) findViewById(R.id.tt);
-        tt.setOnClickListener(this);
-        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
-        Fabric.with(this, new Twitter(authConfig));
+
         tt.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
-                myName.setText(result.data.getUserName() + " Action réussi!");
+                Log.d(Home.class.getSimpleName(), "---Réussi ---");
+                TwitterSession twitterSession = result.data;
+                myName.setText(twitterSession.getUserName());
+                logRs = 3;
             }
-
             @Override
             public void failure(TwitterException exception) {
-                myName.setText("Erreur login Twitter");
+                Log.d(Home.class.getSimpleName(), "--- Fail! ---");
+                myName.setText("Login failed");
+                logRs = 0;
             }
         });
+
+
+        final TwitterAuthClient authClient = new TwitterAuthClient();
+        final TwitterSession session = Twitter.getSessionManager().getActiveSession();
+        myName.setText(session.getUserName());
+
+        tt.setOnClickListener(new View.OnClickListener() {
+
+                                  @Override
+                                  public void onClick(View v) {
+
+                                  }
+                              }
+        );
     }
 
-
-    @Override
-    public void onClick(View v) {
-        int id = v.getId();
-
-        switch (id) {
-            case R.id.ggin:
-                //connectGoogle.signIn();
-                startActivityForResult(connectGoogle.signIn(), connectGoogle.getRcSignIn());
-
-                break;
-            case R.id.ggout:
-                connectGoogle.signOut();
-                break;
-            case R.id.fb:
-                break;
-            case R.id.tt:
-                break;
-        }
-    }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
@@ -183,23 +167,41 @@ public class Home extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        connectGoogle.CallGoogle();
+        if (logRs == 1) {
+            connectGoogle.callGoogle();
+        }
+        updateUI(false);
 
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == connectGoogle.getRcSignIn()) {
+        //si Connexion via google +
+        if (requestCode == connectGoogle.getRcSignIn() && logRs == 1) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            connectGoogle.handleSignInResult(result);
+            connectGoogle.handleSignInResultGoogle(result);
             updateUI(connectGoogle.isVisibility());
+            Log.d(Home.class.getSimpleName(), " Connexion Google");
         }
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-        tt.onActivityResult(requestCode, resultCode, data);
+        //si Connexion via Facebook
+        else if (logRs == 2) {
+            Log.d(Home.class.getSimpleName(), " Connexion Facebook");
+            connectFacebook.getCallbackManager().onActivityResult(requestCode, resultCode, data);
+        }
+        //Si connexion via Twitter
+        else if (logRs == 3) {
+            Log.d(Home.class.getSimpleName(), " Connexion Twitter");
+            tt.onActivityResult(requestCode, resultCode, data);
+            myName.setText(requestCode);
+        }
     }
 
+    /**
+     * Visibilite des widgets et des layouts
+     *
+     * @param isSignedIn
+     */
     private void updateUI(boolean isSignedIn) {
         if (isSignedIn) {
             ggin.setVisibility(View.GONE);
