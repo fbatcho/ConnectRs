@@ -70,6 +70,7 @@ public class Home extends AppCompatActivity implements
     //Twitter
     private TwitterLoginButton tt;
     private ConnectTwitter connectTwitter;
+    private TwitterSession session;
 
 
     @Override
@@ -126,13 +127,14 @@ public class Home extends AppCompatActivity implements
 
         //For login Twitter
         tt = (TwitterLoginButton) findViewById(R.id.tt);
-
         tt.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
                 Log.d(Home.class.getSimpleName(), "---Réussi ---");
-                TwitterSession twitterSession = result.data;
-                myName.setText(twitterSession.getUserName());
+                session = result.data;
+                String username = session.getUserName();
+                Long  userid = session.getUserId();
+                myName.setText("Hi " + username);
                 logRs = 3;
             }
             @Override
@@ -143,19 +145,6 @@ public class Home extends AppCompatActivity implements
             }
         });
 
-
-        final TwitterAuthClient authClient = new TwitterAuthClient();
-        final TwitterSession session = Twitter.getSessionManager().getActiveSession();
-        myName.setText(session.getUserName());
-
-        tt.setOnClickListener(new View.OnClickListener() {
-
-                                  @Override
-                                  public void onClick(View v) {
-
-                                  }
-                              }
-        );
     }
 
 
