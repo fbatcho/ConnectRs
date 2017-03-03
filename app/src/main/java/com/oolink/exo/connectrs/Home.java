@@ -10,14 +10,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-import com.facebook.FacebookSdk;
 
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
@@ -33,10 +33,7 @@ import com.twitter.sdk.android.core.Result;
 
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
-import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
-import com.twitter.sdk.android.core.models.User;
-import com.twitter.sdk.android.core.services.AccountService;
 
 import util.ConnectFacebook;
 import util.ConnectGoogle;
@@ -68,7 +65,8 @@ public class Home extends AppCompatActivity implements
 
 
     //Twitter
-    private TwitterLoginButton tt;
+    private TwitterLoginButton ttin;
+    private Button ttout;
     private ConnectTwitter connectTwitter;
     private TwitterSession session;
 
@@ -76,7 +74,7 @@ public class Home extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(this.getApplicationContext());
+        connectFacebook = new ConnectFacebook(this);
         connectTwitter = new ConnectTwitter(this);
         setContentView(R.layout.activity_home);
 
@@ -94,7 +92,7 @@ public class Home extends AppCompatActivity implements
         ggout = (Button) findViewById(R.id.ggout);
         connectGoogle.signInServices(fragmentActivity, listener);
 
-
+        //Connexion Google
         ggin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,7 +100,7 @@ public class Home extends AppCompatActivity implements
                 logRs = 1;
             }
         });
-
+        //Deconnexion Google
         ggout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -112,10 +110,8 @@ public class Home extends AppCompatActivity implements
             }
         });
 
-
         //For login Facebook
         fb = (LoginButton) findViewById(R.id.fb);
-        connectFacebook = new ConnectFacebook();
         fb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,17 +122,22 @@ public class Home extends AppCompatActivity implements
 
 
         //For login Twitter
-        tt = (TwitterLoginButton) findViewById(R.id.tt);
-        tt.setCallback(new Callback<TwitterSession>() {
+        ttin = (TwitterLoginButton) findViewById(R.id.tt);
+        ttout = (Button) findViewById(R.id.ttout);
+
+        ttin.setCallback(new Callback<TwitterSession>() {
+
             @Override
             public void success(Result<TwitterSession> result) {
                 Log.d(Home.class.getSimpleName(), "---Réussi ---");
                 session = result.data;
                 String username = session.getUserName();
-                Long  userid = session.getUserId();
                 myName.setText("Hi " + username);
+                connectTwitter.handlerSignInResultTwitter(session, myName, myEmail);
+                ttout.setVisibility(View.VISIBLE);
                 logRs = 3;
             }
+
             @Override
             public void failure(TwitterException exception) {
                 Log.d(Home.class.getSimpleName(), "--- Fail! ---");
@@ -145,8 +146,14 @@ public class Home extends AppCompatActivity implements
             }
         });
 
+        ttout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Twitter.getSessionManager().clearActiveSession();
+                Twitter.logOut();
+            }
+        });
     }
-
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
@@ -166,23 +173,26 @@ public class Home extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d(Home.class.getSimpleName(),"---Type de RS: "+logRs+" ---");
         //si Connexion via google +
         if (requestCode == connectGoogle.getRcSignIn() && logRs == 1) {
+            Log.d(Home.class.getSimpleName(), " Connexion Google");
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             connectGoogle.handleSignInResultGoogle(result);
             updateUI(connectGoogle.isVisibility());
-            Log.d(Home.class.getSimpleName(), " Connexion Google");
         }
         //si Connexion via Facebook
         else if (logRs == 2) {
             Log.d(Home.class.getSimpleName(), " Connexion Facebook");
             connectFacebook.getCallbackManager().onActivityResult(requestCode, resultCode, data);
+            updateUI(true);
         }
         //Si connexion via Twitter
         else if (logRs == 3) {
             Log.d(Home.class.getSimpleName(), " Connexion Twitter");
-            tt.onActivityResult(requestCode, resultCode, data);
-            myName.setText(requestCode);
+            ttin.onActivityResult(requestCode, resultCode, data);
+            updateUI(true);
+
         }
     }
 
@@ -193,12 +203,22 @@ public class Home extends AppCompatActivity implements
      */
     private void updateUI(boolean isSignedIn) {
         if (isSignedIn) {
-            ggin.setVisibility(View.GONE);
-            ggout.setVisibility(View.VISIBLE);
+            if (logRs == 1) {
+                ggin.setVisibility(View.GONE);
+                ggout.setVisibility(View.VISIBLE);
+            }
+            if (logRs == 3){
+                ttout.setVisibility(View.VISIBLE);
+        }
             myProfileLayout.setVisibility(View.VISIBLE);
         } else {
-            ggin.setVisibility(View.VISIBLE);
-            ggout.setVisibility(View.GONE);
+            if (logRs == 1) {
+                ggin.setVisibility(View.VISIBLE);
+                ggout.setVisibility(View.GONE);
+            }
+            if (logRs == 3){
+                ttout.setVisibility(View.GONE);
+            }
             myProfileLayout.setVisibility(View.GONE);
         }
     }

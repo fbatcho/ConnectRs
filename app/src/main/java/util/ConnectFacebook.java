@@ -1,5 +1,6 @@
 package util;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -7,6 +8,7 @@ import android.widget.TextView;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
@@ -24,8 +26,8 @@ public class ConnectFacebook {
 
     private CallbackManager callbackManager;
 
-    public ConnectFacebook() {
-
+    public ConnectFacebook(Context context) {
+        FacebookSdk.sdkInitialize(context);
     }
 
     public void callFacebook(LoginButton button, final TextView myName, final TextView myEmail){
@@ -47,8 +49,9 @@ public class ConnectFacebook {
                             }
                         }
                 );
+
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,name,email");
+                parameters.putString("fields", "id,last_name,email");
                 request.setParameters(parameters);
                 request.executeAsync();
             }

@@ -29,8 +29,9 @@
 
         <ImageView
             android:id="@+id/myProfil"
-            android:layout_width="wrap_content"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginTop="21dp"
             app:srcCompat="@mipmap/ic_launcher" />
 
@@ -70,20 +71,31 @@
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="29dp" />
 
-    <com.facebook.login.widget.LoginButton
-        android:id="@+id/fb"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="145dp" />
-
     <com.twitter.sdk.android.core.identity.TwitterLoginButton
         android:id="@+id/tt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/ggout"
+        android:layout_below="@+id/fb"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="17dp" />
+
+    <Button
+        android:id="@+id/ttout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Log in of Twitter"
+        android:visibility="gone"
+        android:layout_below="@+id/ggin"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="20dp" />
+
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/fb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="174dp"
+        android:layout_below="@+id/textView"
+        android:layout_toEndOf="@+id/ttout" />
 
     <Button
         android:id="@+id/ggout"
@@ -91,9 +103,8 @@
         android:layout_height="wrap_content"
         android:text="Sign out of Google"
         android:visibility="visible"
-        android:layout_below="@+id/ggin"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="20dp" />
-
+        android:layout_marginTop="72dp"
+        android:layout_below="@+id/fb"
+        android:layout_toEndOf="@+id/textView" />
 
 </RelativeLayout>
