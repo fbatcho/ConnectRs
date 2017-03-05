@@ -30,13 +30,13 @@ public class ConnectFacebook {
         FacebookSdk.sdkInitialize(context);
     }
 
-    public void callFacebook(LoginButton button, final TextView myName, final TextView myEmail){
+    public void callFacebook(LoginButton button, final TextView myName, final TextView myEmail) {
         this.callbackManager = CallbackManager.Factory.create();
         button.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
 
             @Override
             public void onSuccess(LoginResult loginResult) {
-                Log.d(Home.class.getSimpleName(),"Auth Réussi! ") ;
+                Log.d(Home.class.getSimpleName(), "Auth Réussi! ");
                 GraphRequest request = GraphRequest.newMeRequest(
                         loginResult.getAccessToken(),
                         new GraphRequest.GraphJSONObjectCallback() {
@@ -44,14 +44,14 @@ public class ConnectFacebook {
                             @Override
                             public void onCompleted(JSONObject object, GraphResponse response) {
                                 myEmail.setText(object.optString("email"));
-                                myName.setText(object.optString("last_name"));
+                                myName.setText(object.optString("last_name")+" "+object.optString("first_name"));
 
                             }
                         }
                 );
 
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,last_name,email");
+                parameters.putString("fields", "id,last_name,first_name,email");
                 request.setParameters(parameters);
                 request.executeAsync();
             }
@@ -68,7 +68,6 @@ public class ConnectFacebook {
         });
 
     }
-
 
 
     public CallbackManager getCallbackManager() {
