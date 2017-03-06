@@ -1,27 +1,24 @@
 package util;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.provider.ContactsContract;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 
-import com.facebook.AccessToken;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.oolink.exo.connectrs.Home;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.TwitterApiClient;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterAuthClient;
 import com.twitter.sdk.android.core.models.User;
-import com.twitter.sdk.android.core.services.AccountService;
-import com.twitter.sdk.android.tweetui.internal.SwipeToDismissTouchListener;
 
-
-import org.w3c.dom.Text;
 
 import io.fabric.sdk.android.Fabric;
 import retrofit2.Call;
@@ -30,55 +27,114 @@ import retrofit2.Call;
 public class ConnectTwitter {
     private static final String TWITTER_KEY = "G1Reb2Zq5OTay56lVGY8Y4AYb";
     private static final String TWITTER_SECRET = "qqkRWfOFy00IEsmwr9G2KfPyNP2GSPxiY8S0DG0S6u9sEXtntB";
+    private TextView myEmail, myName;
+    private ImageView myProfil;
+    private Context context;
+    private String email, pseudo;
 
-
+    /**
+     *
+     * @param context
+     */
     public ConnectTwitter(Context context) {
+        this.context = context;
         final TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         Fabric.with(context, new Twitter(authConfig));
 
     }
 
-
     /**
-     * Recupére le resultat de la connexion et traite les données
      *
-     * @param session
      * @param myName
      * @param myEmail
+     * @param myProfil
+     * @return
      */
-    public void handlerSignInResultTwitter(TwitterSession session, final TextView myName, final TextView myEmail) {
+
+    public Callback CallTwitter(TextView myName,TextView myEmail, ImageView myProfil) {
+        this.myEmail = myEmail;
+        this.myName = myName;
+        this.myProfil = myProfil;
+
+        final Callback twitterCallback = new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+                Log.d(Home.class.getSimpleName(), "---Réussi ---");
+                handlerSignInResultTwitter(result);
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                Log.d(Home.class.getSimpleName(), "--- Fail! ---");
+            }
+        };
+        return twitterCallback;
+    }
+
+    /**
+     *  Recupére le resultat de la connexion et traite les données
+     * @param result
+     */
+    private void handlerSignInResultTwitter(final Result<TwitterSession> result) {
+
+   //Creating a twitter session with result's data
+        final TwitterSession session = result.data;
+
+
+        //Getting the username from session
+        final String username = session.getUserName();
+        //final String email=result.data.email;
+
+        //This code will fetch the profile image URL
+        //Getting the account service of the user logged in
         Call<User> userResult = Twitter.getApiClient(session).getAccountService().verifyCredentials(true, false);
+
         userResult.enqueue(new Callback<User>() {
             @Override
-            public void success(Result<User> userResult) {
-                Log.d("createdAt", "in handler Twitter");
-
-                User user = userResult.data;
-                // String twitterImage = user.profileImageUrl;
-
-                try {
-                    myName.setText(user.name);
-                    myEmail.setText(user.email);
-                    Log.d("imageurl", user.profileImageUrl);
-                    Log.d("name", user.name);
-                    Log.d("email", user.email);
-                    Log.d("des", user.description);
-                    Log.d("followers ", String.valueOf(user.followersCount));
-                    Log.d("createdAt", user.createdAt);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            public void failure(TwitterException e) {
+                //If any error occurs handle it here
             }
 
             @Override
-            public void failure(TwitterException e) {
-                Log.d(ConnectTwitter.class.getSimpleName(), "User failed");
-            }
+            public void success(Result<User> userResult) {
+                //If it succeeds creating a User object from userResult.data
+                User user = userResult.data;
+                //Getting the profile image url
+                String profileImage = user.profileImageUrl.replace("_normal", "");
+                pseudo=user.name;
+                myName.setText(pseudo);
+                Glide.with(context).load(profileImage)
+                        .thumbnail(0.5f)
+                        .crossFade()
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(myProfil);
 
+                final TwitterAuthClient authClient = new TwitterAuthClient();
+                authClient.requestEmail(session, new Callback<String>() {
+                    @Override
+                    public void success(Result<String> result) {
+                         email = result.data.toString();
+                        myEmail.setText(email);
+                        Log.d("Yes", "email--> " + email);
+                    }
+
+                    @Override
+                    public void failure(TwitterException exception) {
+                        Log.d("Oh No!", "Email failed");
+                    }
+                });
+                Log.d("done", "name--> " + username + " url-->" + profileImage);
+
+            }
         });
+
     }
 
 
+    public void sigOutTwitter() {
+        Twitter.getSessionManager().clearActiveSession();
+        Twitter.logOut();
+    }
 
 }
 

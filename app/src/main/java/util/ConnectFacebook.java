@@ -3,8 +3,11 @@ package util;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -18,19 +21,34 @@ import com.oolink.exo.connectrs.Home;
 import org.json.JSONObject;
 
 
-/**
- * Created by Antoine on 02/03/2017.
- */
+
 
 public class ConnectFacebook {
 
     private CallbackManager callbackManager;
+    private String email, nom, prenom, pseudo;
+    private Context context;
 
+    /**
+     *
+     * @param context context de l'activité
+     */
     public ConnectFacebook(Context context) {
+        this.context=context;
         FacebookSdk.sdkInitialize(context);
     }
 
-    public void callFacebook(LoginButton button, final TextView myName, final TextView myEmail) {
+    /**
+     * Appelle le service Facebook
+     * Recupére le resultat de la connexion et traite les données
+     *
+     * @param button button login
+     * @param myName nom user
+     * @param myEmail email user
+     * @param myProfil image du profile
+     */
+
+    public void handlerSignInResultFacebook(LoginButton button, final TextView myName, final TextView myEmail, final ImageView myProfil) {
         this.callbackManager = CallbackManager.Factory.create();
         button.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
 
@@ -43,8 +61,19 @@ public class ConnectFacebook {
 
                             @Override
                             public void onCompleted(JSONObject object, GraphResponse response) {
-                                myEmail.setText(object.optString("email"));
-                                myName.setText(object.optString("last_name")+" "+object.optString("first_name"));
+                                email = object.optString("email");
+                                nom = object.optString("last_name");
+                                prenom = object.optString("first_name");
+                               String id = object.optString("id");
+                                String myPicture= "http://graph.facebook.com/"+id+"/picture?type=large";
+                                Glide.with(context).load(myPicture)
+                                        .thumbnail(0.5f)
+                                        .crossFade()
+                                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                        .into(myProfil);
+                                pseudo = object.optString("last_name") + " " + object.optString("first_name");
+                                myEmail.setText(email);
+                                myName.setText(pseudo);
 
                             }
                         }
@@ -69,7 +98,10 @@ public class ConnectFacebook {
 
     }
 
-
+    /**
+     * getter
+     * @return Callback
+     */
     public CallbackManager getCallbackManager() {
         return callbackManager;
     }

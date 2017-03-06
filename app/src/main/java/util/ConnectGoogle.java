@@ -4,6 +4,7 @@ package util;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.ImageView;
@@ -19,38 +20,38 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+
 import com.oolink.exo.connectrs.Home;
+
 
 
 public class ConnectGoogle {
 
     private GoogleApiClient mGoogleApiClient;
-    private static final int RC_SIGN_IN = 007;
+    private static final int RC_SIGN_IN = 7;
     private boolean visibility = false;
     private TextView myEmail, myName;
-    private ImageView myProfil;
+    private ImageView myProfile;
     private ProgressDialog mProgressDialog;
     private Context context;
 
 
     /**
-     *
-     * @param context
-     * @param myEmail
-     * @param myName
-     * @param myProfil
+     * @param context contexte de l'activité
+     * @param myEmail email user
+     * @param myName nom user
+     * @param myProfile image du profile
      */
-    public ConnectGoogle(Context context, TextView myEmail, TextView myName, ImageView myProfil) {
+    public ConnectGoogle(Context context,TextView myName, TextView myEmail,ImageView myProfile) {
         this.myEmail = myEmail;
         this.myName = myName;
-        this.myProfil = myProfil;
+        this.myProfile = myProfile;
         this.context = context;
     }
 
     /**
-     *
-     * @param fragment
-     * @param failListener
+     * @param fragment FragmentActivity
+     * @param failListener listener of Google api
      */
     public void signInServices(FragmentActivity fragment, GoogleApiClient.OnConnectionFailedListener failListener) {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -64,29 +65,29 @@ public class ConnectGoogle {
     }
 
     /**
-     * Méthode pour se logger avec Google+
-     * @return
+     * Method to login with Google+
+     *
+     * @return intent of google api
      */
     public Intent signInGoogle() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        return signInIntent;
+        return Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
     }
 
     /**
-     * Méthode pour se déconnecter de Google+
+     * Method to disconnected of Google+
      */
     public void signOutGoogle() {
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {
                     @Override
-                    public void onResult(Status status) {
+                    public void onResult(@NonNull Status status) {
                         visibility = false;
                     }
                 });
     }
 
     /**
-     *
+     *Call google services login
      */
     public void callGoogle() {
         OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
@@ -98,7 +99,7 @@ public class ConnectGoogle {
             showProgressDialog(context);
             opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
                 @Override
-                public void onResult(GoogleSignInResult googleSignInResult) {
+                public void onResult(@NonNull GoogleSignInResult googleSignInResult) {
                     hideProgressDialog();
                     handleSignInResultGoogle(googleSignInResult);
                 }
@@ -107,8 +108,8 @@ public class ConnectGoogle {
     }
 
     /**
-     * Recupére le resultat de la connexion et traite les données
-     * @param result
+     * Give le result of connexion and set data
+     * @param result parameter of connexion
      */
 
     public void handleSignInResultGoogle(GoogleSignInResult result) {
@@ -117,19 +118,21 @@ public class ConnectGoogle {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
 
+            assert acct != null;
             Log.e(Home.class.getSimpleName(), "display name: " + acct.getDisplayName());
 
             String personPhotoUrl = acct.getPhotoUrl().toString();
             Log.e(Home.class.getSimpleName(), "Name: " + myName + ", email: " + myEmail
                     + ", Image: " + personPhotoUrl);
-
-            myName.setText(acct.getDisplayName());
-            myEmail.setText(acct.getEmail());
+            String pseudo = acct.getDisplayName();
+            String email = acct.getEmail();
+            myName.setText(pseudo);
+            myEmail.setText(email);
             Glide.with(context).load(personPhotoUrl)
                     .thumbnail(0.5f)
                     .crossFade()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(myProfil);
+                    .into(myProfile);
 
 
             visibility = true;
@@ -142,7 +145,8 @@ public class ConnectGoogle {
 
     /**
      * Barre de chargement
-     * @param context
+     *
+     * @param context context de l'activité
      */
     private void showProgressDialog(Context context) {
         if (mProgressDialog == null) {
@@ -170,9 +174,13 @@ public class ConnectGoogle {
 
     /**
      * setter
-     * @return
+     *
+     * @return variable sign in
      */
     public int getRcSignIn() {
         return RC_SIGN_IN;
     }
+
+
+
 }

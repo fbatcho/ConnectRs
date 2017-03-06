@@ -2,6 +2,11 @@
     <string name="app_name">Home</string>
     <string name="facebook_app_id">1384426168246989</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="name_profil">Nom</string>
+    <string name="email_profil">Email</string>
+    <string name="button_text_login">Se Connecter</string>
+    <string name="button_text_logout">Déconnexion</string>
+    <string name="title">Authentification</string>
+    <string name="picture_profil">Image de profile</string>
 </resources>
