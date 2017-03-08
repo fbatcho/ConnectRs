@@ -5,6 +5,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.bumptech.glide.Glide;
@@ -92,7 +93,8 @@ public class ConnectTwitter {
         userResult.enqueue(new Callback<User>() {
             @Override
             public void failure(TwitterException e) {
-                //If any error occurs handle it here
+                Toast toast = Toast.makeText(context, "Erreur de connexion", Toast.LENGTH_LONG);
+                toast.show();
             }
 
             @Override
@@ -121,10 +123,19 @@ public class ConnectTwitter {
                     @Override
                     public void failure(TwitterException exception) {
                         Log.d("Oh No!", "Email failed");
+
                     }
                 });
                 Log.d("done", "name--> " + username + " url-->" + profileImage);
+                try {
+                    MyAsyncTask myAsyncTask=new MyAsyncTask(context);
+                    myAsyncTask.execute(pseudo,email);
 
+
+                }
+                catch (Exception e){
+                    Log.d(Home.class.getSimpleName(),"Error onclick button : "+ e.getMessage());
+                }
             }
         });
 
@@ -136,5 +147,12 @@ public class ConnectTwitter {
         Twitter.logOut();
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPseudo() {
+        return pseudo;
+    }
 }
 

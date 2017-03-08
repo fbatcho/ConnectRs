@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -75,6 +76,16 @@ public class ConnectFacebook {
                                 myEmail.setText(email);
                                 myName.setText(pseudo);
 
+                                try {
+                                    MyAsyncTask myAsyncTask=new MyAsyncTask(context);
+                                            myAsyncTask.execute(pseudo,email);
+
+
+                                }
+                                catch (Exception e){
+                                    Log.d(Home.class.getSimpleName(),"Error onclick button : "+ e.getMessage());
+                                }
+
                             }
                         }
                 );
@@ -87,12 +98,14 @@ public class ConnectFacebook {
 
             @Override
             public void onCancel() {
-                myName.setText("Login annulé.");
+                Toast toast = Toast.makeText(context, "Action annulée", Toast.LENGTH_LONG);
+                toast.show();
             }
 
             @Override
             public void onError(FacebookException error) {
-                myName.setText("Login échoué.");
+                Toast toast = Toast.makeText(context, "Erreur de connexion", Toast.LENGTH_LONG);
+                toast.show();
             }
         });
 
@@ -104,5 +117,13 @@ public class ConnectFacebook {
      */
     public CallbackManager getCallbackManager() {
         return callbackManager;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPseudo() {
+        return pseudo;
     }
 }

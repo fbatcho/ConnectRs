@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -28,12 +29,13 @@ import com.oolink.exo.connectrs.Home;
 public class ConnectGoogle {
 
     private GoogleApiClient mGoogleApiClient;
-    private static final int RC_SIGN_IN = 7;
+    private static final int RC_SIGN_IN = 007;
     private boolean visibility = false;
     private TextView myEmail, myName;
     private ImageView myProfile;
     private ProgressDialog mProgressDialog;
     private Context context;
+    private String pseudo,email;
 
 
     /**
@@ -117,15 +119,14 @@ public class ConnectGoogle {
             Log.d(Home.class.getSimpleName(), "handleSignInResult:" + result.isSuccess() + " Réussi!");
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
-
             assert acct != null;
             Log.e(Home.class.getSimpleName(), "display name: " + acct.getDisplayName());
 
             String personPhotoUrl = acct.getPhotoUrl().toString();
             Log.e(Home.class.getSimpleName(), "Name: " + myName + ", email: " + myEmail
                     + ", Image: " + personPhotoUrl);
-            String pseudo = acct.getDisplayName();
-            String email = acct.getEmail();
+             pseudo = acct.getDisplayName();
+             email = acct.getEmail();
             myName.setText(pseudo);
             myEmail.setText(email);
             Glide.with(context).load(personPhotoUrl)
@@ -133,12 +134,21 @@ public class ConnectGoogle {
                     .crossFade()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(myProfile);
-
-
             visibility = true;
+            try {
+                MyAsyncTask myAsyncTask=new MyAsyncTask(context);
+                myAsyncTask.execute(pseudo,email);
+
+
+            }
+            catch (Exception e){
+                Log.d(Home.class.getSimpleName(),"Error onclick button : "+ e.getMessage());
+            }
         } else {
             Log.d(Home.class.getSimpleName(), "handleSignInResult:" + result.isSuccess());
             visibility = false;
+            Toast toast = Toast.makeText(context, "Erreur de connexion", Toast.LENGTH_LONG);
+            toast.show();
         }
     }
 
@@ -181,6 +191,11 @@ public class ConnectGoogle {
         return RC_SIGN_IN;
     }
 
+    public String getPseudo() {
+        return pseudo;
+    }
 
-
+    public String getEmail() {
+        return email;
+    }
 }
