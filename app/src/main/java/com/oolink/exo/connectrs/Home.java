@@ -134,9 +134,7 @@ public class Home extends AppCompatActivity implements
 
                 findViewById(R.id.ttout);
 
-        ttout.setOnClickListener(new View.OnClickListener()
-
-                                 {
+        ttout.setOnClickListener(new View.OnClickListener() {
                                      @Override
                                      public void onClick(View v) {
                                          connectTwitter.sigOutTwitter();
@@ -145,7 +143,6 @@ public class Home extends AppCompatActivity implements
                                          ttout.setVisibility(View.GONE);
                                      }
                                  }
-
         );
     }
 
@@ -167,8 +164,6 @@ public class Home extends AppCompatActivity implements
         } else {
             updateUI(false);
         }
-
-
     }
 
     @Override

@@ -1,5 +1,6 @@
 package util;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -21,43 +22,60 @@ import cz.msebera.android.httpclient.Header;
 public class MyAsyncTask {
 
     private Context context;
-    private String url = "http://www.ovh.net/www/android_php/user/create_user.php";
-    private AsyncHttpClient client = new AsyncHttpClient();
+    private String url = "http://www.alertcar.ovh/android_php/user/create_user.php";
+    private static AsyncHttpClient client = new AsyncHttpClient();
+    private ProgressDialog mProgressDialog;
 
-    public MyAsyncTask(Context context, final String pseudo, final String email) {
+
+    public MyAsyncTask(Context context) {
         this.context = context;
-        RequestParams params= new RequestParams();
-        params.put("Pseudo",email);
-        params.put("Email",pseudo);
-        params.put("Password","Essaie");
-        params.put("Telephone","Essaie");
 
-        client.post(url, new AsyncHttpResponseHandler() {
-
-
-            @Override
-            public void onStart() {
-                //Toast.makeText(context, "command sent", Toast.LENGTH_LONG).show();
-
-            }
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                Log.d(Home.class.getSimpleName(), "Success ");
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                Log.d(Home.class.getSimpleName(), "Error http Request failed status: "+statusCode+" params: "+pseudo+" "+email );
-            }
-
-            @Override
-            public void onRetry(int retryNo) {
-                Log.d(Home.class.getSimpleName(), "Retry "+retryNo);
-            }
-        });
     }
 
+    /**
+     * Inscription user par Réseaux sociaux
+     * @param pseudo pseudo user
+     * @param email email user
+     */
+    public void inscriptionRs(final String pseudo, final String email)
+{
+    RequestParams params= new RequestParams();
+    params.put("Pseudo",pseudo);
+    params.put("Email",email);
+    params.put("Password"," ");
+    params.put("Telephone"," ");
 
+    client.post(url,params, new AsyncHttpResponseHandler() {
+
+        @Override
+        public void onStart() {
+            if (mProgressDialog == null) {
+                mProgressDialog = new ProgressDialog(context);
+                mProgressDialog.setMessage("Chargement");
+                mProgressDialog.setIndeterminate(true);
+            }
+            mProgressDialog.show();
+        }
+
+        @Override
+        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+            Log.d(Home.class.getSimpleName(), "Success "+"status code :"+response+" email et pseudo:"+email+" "+pseudo);
+            if (mProgressDialog != null && mProgressDialog.isShowing()) {
+                mProgressDialog.hide();
+            }
+        }
+
+        @Override
+        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+            Log.d(Home.class.getSimpleName(), "Error http Request failed status: "+statusCode+" params: "+pseudo+" "+email );
+            mProgressDialog.dismiss();
+        }
+
+        @Override
+        public void onRetry(int retryNo) {
+            Log.d(Home.class.getSimpleName(), "Retry "+retryNo);
+        }
+    });
+}
 
 }

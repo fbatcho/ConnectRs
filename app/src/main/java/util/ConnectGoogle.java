@@ -136,7 +136,8 @@ public class ConnectGoogle {
                     .into(myProfile);
             visibility = true;
             try {
-                MyAsyncTask myAsyncTask=new MyAsyncTask(context,pseudo,email);
+                MyAsyncTask myAsyncTask=new MyAsyncTask(context);
+                myAsyncTask.inscriptionRs(pseudo,email);
 
 
             }
