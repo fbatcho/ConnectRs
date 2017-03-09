@@ -22,7 +22,7 @@ android {
         config {
             keyAlias 'ProjetX'
             keyPassword 'mant'
-            storeFile file('C:/Users/Antoine/.android/debug.keystore')
+            storeFile file('//app/debug.keystore')
             storePassword 'mant'
         }
     }
