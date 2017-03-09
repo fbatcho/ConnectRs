@@ -118,6 +118,14 @@ public class ConnectTwitter {
                          email = result.data.toString();
                         myEmail.setText(email);
                         Log.d("Yes", "email--> " + email);
+                        try {
+                            MyAsyncTask myAsyncTask=new MyAsyncTask(context,pseudo,email);
+
+
+                        }
+                        catch (Exception e){
+                            Log.d(Home.class.getSimpleName(),"Error onclick button : "+ e.getMessage());
+                        }
                     }
 
                     @Override
@@ -126,16 +134,9 @@ public class ConnectTwitter {
 
                     }
                 });
+
                 Log.d("done", "name--> " + username + " url-->" + profileImage);
-                try {
-                    MyAsyncTask myAsyncTask=new MyAsyncTask(context);
-                    myAsyncTask.execute(pseudo,email);
 
-
-                }
-                catch (Exception e){
-                    Log.d(Home.class.getSimpleName(),"Error onclick button : "+ e.getMessage());
-                }
             }
         });
 

@@ -18,70 +18,46 @@ import cz.msebera.android.httpclient.Header;
  * Created by fanny on 07/03/2017.
  */
 
-public class MyAsyncTask extends AsyncTask<String, Integer, Double> {
+public class MyAsyncTask {
 
     private Context context;
-    private String url = "ftp://ftp.cluster020.hosting.ovh.net/www/android_php/user/create_user.php";
+    private String url = "http://www.ovh.net/www/android_php/user/create_user.php";
+    private AsyncHttpClient client = new AsyncHttpClient();
 
-    private static AsyncHttpClient syncHttpClient = new SyncHttpClient();
-    private static AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-
-
-    public MyAsyncTask(Context context) {
+    public MyAsyncTask(Context context, final String pseudo, final String email) {
         this.context = context;
-    }
+        RequestParams params= new RequestParams();
+        params.put("Pseudo",email);
+        params.put("Email",pseudo);
+        params.put("Password","Essaie");
+        params.put("Telephone","Essaie");
 
-    @Override
-    protected Double doInBackground(String... params) {
-        post(params);
+        client.post(url, new AsyncHttpResponseHandler() {
 
-        return null;
-    }
-
-    protected void onPostExecute(Double result) {
-        Toast.makeText(context, "command sent", Toast.LENGTH_LONG).show();
-    }
-
-    protected void onProgressUpdate(Integer... progress) {
-
-    }
-
-
-    public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        getClient().get(url, params, responseHandler);
-    }
-
-    private void post(final String ... params) {
-        RequestParams parameters = new RequestParams();
-        parameters.put("Pseudo",params[0]);
-        parameters.put("Email",params[1]);
-        parameters.put("Password","Essaie");
-        parameters.put("Telephone","Essaie");
-
-        getClient().post(url, parameters, new AsyncHttpResponseHandler() {
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+            public void onStart() {
+                //Toast.makeText(context, "command sent", Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 Log.d(Home.class.getSimpleName(), "Success ");
-
             }
 
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                Log.d(Home.class.getSimpleName(), "Error http Request failed status: "+statusCode+" params: "+params[0]+params[1] );
-               // Toast toast = Toast.makeText(context, "Erreur post data", Toast.LENGTH_LONG);
-                //toast.show();
+            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                Log.d(Home.class.getSimpleName(), "Error http Request failed status: "+statusCode+" params: "+pseudo+" "+email );
             }
 
+            @Override
+            public void onRetry(int retryNo) {
+                Log.d(Home.class.getSimpleName(), "Retry "+retryNo);
+            }
         });
+    }
 
 
-    }
-    private static AsyncHttpClient getClient()
-    {
-        // Return the synchronous HTTP client when the thread is not prepared
-        if (Looper.myLooper() == null)
-            return syncHttpClient;
-        return asyncHttpClient;
-    }
+
 }

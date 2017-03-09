@@ -62,8 +62,6 @@ public class Home extends AppCompatActivity implements
     private Button ttout;
     private ConnectTwitter connectTwitter;
 
-    private MyAsyncTask myAsyncTask = new MyAsyncTask(contextActivity);
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

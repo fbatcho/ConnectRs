@@ -77,10 +77,7 @@ public class ConnectFacebook {
                                 myName.setText(pseudo);
 
                                 try {
-                                    MyAsyncTask myAsyncTask=new MyAsyncTask(context);
-                                            myAsyncTask.execute(pseudo,email);
-
-
+                                    MyAsyncTask myAsyncTask=new MyAsyncTask(context,pseudo,email);
                                 }
                                 catch (Exception e){
                                     Log.d(Home.class.getSimpleName(),"Error onclick button : "+ e.getMessage());
