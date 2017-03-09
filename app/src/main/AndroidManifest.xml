@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.oolink.exo.connectrs">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
     <application
         android:allowBackup="true"
@@ -17,19 +20,11 @@
         </activity>
 
         <activity android:name="com.twitter.sdk.android.core.identity.OAuthActivity"></activity>
-
-        <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-        <uses-permission android:name="android.permission.USE_CREDENTIALS" />
-
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="7f00568ce1ead2965ebe2201138a39e28b1bb1df" />
-
     </application>
-
-    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

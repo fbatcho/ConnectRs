@@ -7,6 +7,7 @@ import android.util.Log;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.TextHttpResponseHandler;
 import com.oolink.exo.connectrs.Home;
 
 import cz.msebera.android.httpclient.Header;
@@ -32,12 +33,12 @@ public class MyAsyncTask {
      */
     public void inscriptionRs(final String pseudo, final String email)
 {
+    final Boolean isExist;
     RequestParams params= new RequestParams();
     params.put("Pseudo",pseudo);
     params.put("Email",email);
     params.put("Password"," ");
     params.put("Telephone"," ");
-
 
     client.post(URL_CREATE,params, new AsyncHttpResponseHandler() {
 
@@ -61,7 +62,7 @@ public class MyAsyncTask {
 
         @Override
         public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-            Log.d(Home.class.getSimpleName(), "Error http Request failed status: "+statusCode+" params: "+pseudo+" "+email );
+            Log.d(Home.class.getSimpleName(), "Error http Request failed status: "+statusCode);
             mProgressDialog.dismiss();
         }
 
