@@ -2,28 +2,21 @@ package util;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-import com.loopj.android.http.SyncHttpClient;
 import com.oolink.exo.connectrs.Home;
 
 import cz.msebera.android.httpclient.Header;
 
-/**
- * Created by fanny on 07/03/2017.
- */
 
 public class MyAsyncTask {
 
     private Context context;
-    private String url = "http://www.alertcar.ovh/android_php/user/create_user.php";
     private static AsyncHttpClient client = new AsyncHttpClient();
+    private  static     String URL_CREATE = "http://www.alertcar.ovh/android_php/user/create_user.php";
     private ProgressDialog mProgressDialog;
 
 
@@ -45,7 +38,8 @@ public class MyAsyncTask {
     params.put("Password"," ");
     params.put("Telephone"," ");
 
-    client.post(url,params, new AsyncHttpResponseHandler() {
+
+    client.post(URL_CREATE,params, new AsyncHttpResponseHandler() {
 
         @Override
         public void onStart() {
@@ -59,7 +53,7 @@ public class MyAsyncTask {
 
         @Override
         public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-            Log.d(Home.class.getSimpleName(), "Success "+"status code :"+response+" email et pseudo:"+email+" "+pseudo);
+            Log.d(Home.class.getSimpleName(), "Success "+"status code :"+statusCode+" email et pseudo:"+email+" "+pseudo);
             if (mProgressDialog != null && mProgressDialog.isShowing()) {
                 mProgressDialog.hide();
             }

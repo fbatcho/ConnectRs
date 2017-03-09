@@ -1,7 +1,6 @@
 package util;
 
 import android.content.Context;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -35,7 +34,7 @@ public class ConnectTwitter {
 
     /**
      *
-     * @param context
+     * @param context context de l'activité
      */
     public ConnectTwitter(Context context) {
         this.context = context;
@@ -46,10 +45,10 @@ public class ConnectTwitter {
 
     /**
      *
-     * @param myName
-     * @param myEmail
-     * @param myProfil
-     * @return
+     * @param myName input pseudo
+     * @param myEmail input email
+     * @param myProfil input image
+     * @return callback de twitter
      */
 
     public Callback CallTwitter(TextView myName,TextView myEmail, ImageView myProfil) {
@@ -57,7 +56,7 @@ public class ConnectTwitter {
         this.myName = myName;
         this.myProfil = myProfil;
 
-        final Callback twitterCallback = new Callback<TwitterSession>() {
+        return new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
                 Log.d(Home.class.getSimpleName(), "---Réussi ---");
@@ -69,12 +68,11 @@ public class ConnectTwitter {
                 Log.d(Home.class.getSimpleName(), "--- Fail! ---");
             }
         };
-        return twitterCallback;
     }
 
     /**
      *  Recupére le resultat de la connexion et traite les données
-     * @param result
+     * @param result données recupérées par les services google
      */
     private void handlerSignInResultTwitter(final Result<TwitterSession> result) {
 
@@ -115,7 +113,7 @@ public class ConnectTwitter {
                 authClient.requestEmail(session, new Callback<String>() {
                     @Override
                     public void success(Result<String> result) {
-                         email = result.data.toString();
+                         email = result.data;
                         myEmail.setText(email);
                         Log.d("Yes", "email--> " + email);
 
@@ -149,12 +147,5 @@ public class ConnectTwitter {
         Twitter.logOut();
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPseudo() {
-        return pseudo;
-    }
 }
 
