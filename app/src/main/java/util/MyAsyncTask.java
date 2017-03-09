@@ -21,7 +21,7 @@ import cz.msebera.android.httpclient.Header;
 public class MyAsyncTask extends AsyncTask<String, Integer, Double> {
 
     private Context context;
-    private String url = "http://192.168.0.31:80/alertcaryd/android_php/user/create_user.php";
+    private String url = "ftp://ftp.cluster020.hosting.ovh.net/www/android_php/user/create_user.php";
 
     private static AsyncHttpClient syncHttpClient = new SyncHttpClient();
     private static AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
